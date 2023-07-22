@@ -17,6 +17,8 @@ https://github.com/ViRb3/google-camera-motion-photo-splitter/blob/master/splitte
 https://www.codegrepper.com/code-examples/python/split+mp4+into+frames+python
 https://www.file-recovery.com/mp4-signature-format.htm
 https://github.com/nextcloud/photos/issues/365#issuecomment-982014436
+
+Requires cv-3 package from PyPI
 """
 
 from sys import argv

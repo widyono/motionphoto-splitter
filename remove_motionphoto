@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+# removes motionphoto segment of *.MP.jpg and resizes such that
+#  smaller dimension (between width and height) becomes 1024, and
+#  other dimension is resized appropriately to maintain original aspect ratio
+#
+# requires pillow package from PyPI
+
+from sys import argv
+from os import path, mkdir, utime, remove
+from mmap import mmap, ACCESS_READ
+from PIL import Image
+
+for src_filename in argv[1:]:
+    print(f"{src_filename} ... removing Google motion photo ...", end="")
+    base_pathname = src_filename.replace('.MP.jpg','')
+    stripped_filename = base_pathname + ".STRIPPED.jpg"
+    resized_filename = base_pathname + ".jpg"
+    atime = path.getatime(src_filename)
+    mtime = path.getmtime(src_filename)
+    try:
+        with open(src_filename,'rb') as f_in:
+            mm = mmap(f_in.fileno(),0,access=ACCESS_READ)
+            file_size = mm.size()
+            motionphoto_headeroffset = mm.find(b'Item:Semantic="MotionPhoto"')
+            motionphoto_lengthoffset = mm.find(b'Item:Length="',motionphoto_headeroffset)
+            motionphoto_lengthending = mm.find(b'"',motionphoto_lengthoffset+13)
+            mm.seek(motionphoto_lengthoffset + 13)
+            motionphoto_length = int(mm.read(motionphoto_lengthending - motionphoto_lengthoffset - 13))
+            motionphoto_datastart = file_size - motionphoto_length
+            mm.seek(0)
+            with open(stripped_filename,'wb') as f_out:
+                f_out.write(mm.read(motionphoto_datastart))
+            mm.close()
+    except (OSError,) as err:
+        print(f"Problem splitting {src_filename}: {err}.")
+        continue
+    print(" resizing ...", end="")
+    try:
+        with Image.open(stripped_filename) as im:
+            exif = im.getexif()
+            if im.width < im.height:
+                ratio=1024/im.width
+                newwidth=1024
+                newheight=int(im.height * ratio)
+            else:
+                ratio=1024/im.height
+                newheight=1024
+                newwidth=int(im.width * ratio)
+            im.resize((newwidth,newheight))
+            exif = im.getexif()
+            exif.update({256:newwidth,257:newheight})
+            im.save(resized_filename, exif=exif)
+            utime(resized_filename, (atime, mtime))
+        remove(stripped_filename)
+    except (OSError,) as err:
+        print(f"Problem resizing {stripped_filename}: {err}.")
+        continue
+    print(" success.")
