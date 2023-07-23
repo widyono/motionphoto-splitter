@@ -23,10 +23,18 @@ for src_filename in argv[1:]:
             mm = mmap(f_in.fileno(),0,access=ACCESS_READ)
             file_size = mm.size()
             motionphoto_headeroffset = mm.find(b'Item:Semantic="MotionPhoto"')
+            if motionphoto_headeroffset == -1:
+                print(" could not find 'MotionPhoto' header, SKIPPING")
+                continue
+            #print(f"\nmotionphoto_headeroffset = {motionphoto_headeroffset} (location of 'MotionPhoto' text in header)")
             motionphoto_lengthoffset = mm.find(b'Item:Length="',motionphoto_headeroffset)
+            #print(f"motionphoto_lengthoffset = {motionphoto_lengthoffset} (location of first 'Length' field after above)")
             motionphoto_lengthending = mm.find(b'"',motionphoto_lengthoffset+13)
+            #print(f"motionphoto_lengthending = {motionphoto_lengthending} (location of double quote at least 13 characters after above)")
             mm.seek(motionphoto_lengthoffset + 13)
-            motionphoto_length = int(mm.read(motionphoto_lengthending - motionphoto_lengthoffset - 13))
+            motionphoto_length_text = mm.read(motionphoto_lengthending - motionphoto_lengthoffset - 13)
+            #print(f"motionphoto_length_text = {motionphoto_length_text}")
+            motionphoto_length = int(motionphoto_length_text)
             motionphoto_datastart = file_size - motionphoto_length
             mm.seek(0)
             with open(stripped_filename,'wb') as f_out:
