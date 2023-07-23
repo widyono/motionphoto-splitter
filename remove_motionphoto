@@ -15,7 +15,7 @@ for src_filename in argv[1:]:
     print(f"{src_filename} ... removing Google motion photo ...", end="")
     base_pathname = src_filename.replace('.MP.jpg','')
     stripped_filename = base_pathname + ".STRIPPED.jpg"
-    resized_filename = base_pathname + ".jpg"
+    resized_filename = base_pathname + ".MP_S_R.jpg"
     atime = path.getatime(src_filename)
     mtime = path.getmtime(src_filename)
     try:
