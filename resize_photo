@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+# removes motionphoto segment of *.MP.jpg and resizes such that
+#  smaller dimension (between width and height) becomes 1024, and
+#  other dimension is resized appropriately to maintain original aspect ratio
+#
+# requires pillow package from PyPI
+
+from sys import argv
+from os import path, mkdir, utime, remove
+from PIL import Image
+
+for src_filename in argv[1:]:
+    print(f"{src_filename} ... resizing photo ...", end="")
+    base_pathname = src_filename.replace('.jpg','').replace('.JPG','')
+    resized_filename = base_pathname + "_R1024.jpg"
+    atime = path.getatime(src_filename)
+    mtime = path.getmtime(src_filename)
+    try:
+        with Image.open(src_filename) as im:
+            exif = im.getexif()
+            if im.width < im.height:
+                ratio=1024/im.width
+                newwidth=1024
+                newheight=int(im.height * ratio)
+            else:
+                ratio=1024/im.height
+                newheight=1024
+                newwidth=int(im.width * ratio)
+            im.resize((newwidth,newheight))
+            exif = im.getexif()
+            exif.update({256:newwidth,257:newheight})
+            im.save(resized_filename, exif=exif)
+            utime(resized_filename, (atime, mtime))
+        #remove(src_filename)
+    except (OSError,) as err:
+        print(f"Problem resizing {src_filename}: {err}.")
+        continue
+    print(" success.")
