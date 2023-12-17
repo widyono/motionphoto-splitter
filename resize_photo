@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# removes motionphoto segment of *.MP.jpg and resizes such that
+# resizes original image such that:
 #  smaller dimension (between width and height) becomes 1024, and
 #  other dimension is resized appropriately to maintain original aspect ratio
 #
@@ -9,16 +9,18 @@
 from sys import argv
 from os import path, mkdir, utime, remove
 from PIL import Image
+from pathlib import Path
 
 for src_filename in argv[1:]:
-    print(f"{src_filename} ... resizing photo ...", end="")
-    base_pathname = src_filename.replace('.jpg','').replace('.JPG','')
-    resized_filename = base_pathname + "_R1024.jpg"
+    src_pathname = Path(src_filename)
+    print(f"{src_pathname} ... resizing photo ...", end="")
+    base_pathname = src_pathname.stem
+    resized_filename = base_pathname + "_R1024" + src_pathname.suffix
     atime = path.getatime(src_filename)
     mtime = path.getmtime(src_filename)
     try:
         with Image.open(src_filename) as im:
-            exif = im.getexif()
+            #print(f"  original width {im.width}, height {im.height} ...", end="")
             if im.width < im.height:
                 ratio=1024/im.width
                 newwidth=1024
@@ -27,6 +29,7 @@ for src_filename in argv[1:]:
                 ratio=1024/im.height
                 newheight=1024
                 newwidth=int(im.width * ratio)
+            #print(f"  new width {newwidth}, height {newheight} ...", end="")
             im.resize((newwidth,newheight))
             exif = im.getexif()
             exif.update({256:newwidth,257:newheight})
