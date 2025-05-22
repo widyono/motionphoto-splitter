@@ -7,7 +7,7 @@
 # requires pillow package from PyPI
 
 from sys import argv
-from os import path, mkdir, utime, remove
+from os import path, utime
 from PIL import Image
 from pathlib import Path
 

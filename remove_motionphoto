@@ -3,7 +3,7 @@
 # removes motionphoto segment of *.MP.jpg
 
 from sys import argv
-from os import path, mkdir, utime, remove
+from os import path
 from mmap import mmap, ACCESS_READ
 
 for src_filename in argv[1:]:
